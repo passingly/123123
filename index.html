@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gemini Character Chat</title>
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#141413" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'brand-primary': '#f4f4f5', // zinc-100
+              'brand-secondary': '#52525b', // zinc-600
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-in-out',
+              'slide-in-bottom': 'slideInBottom 0.5s ease-in-out',
+              'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: 0 },
+                '100%': { opacity: 1 },
+              },
+              slideInBottom: {
+                '0%': { transform: 'translateY(20px)', opacity: 0 },
+                '100%': { transform: 'translateY(0)', opacity: 1 },
+              },
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      .message-content {
+        color: #F2F0EA;
+      }
+      .message-content p {
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+        color: #F2F0EA;
+      }
+      .message-content p:first-child {
+        margin-top: 0;
+      }
+      .message-content p:last-child {
+        margin-bottom: 0;
+      }
+      .message-content img {
+        max-width: 100%;
+        border-radius: 0.5rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+      .message-content em {
+        font-style: normal;
+        color: #7D7E77;
+      }
+      .message-content strong {
+        font-weight: bold;
+      }
+      .message-content a {
+        color: #d4d4d8; /* zinc-300 */
+        text-decoration: underline;
+      }
+      .message-content ul, .message-content ol {
+        padding-left: 1.5rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+      .message-content ul {
+        list-style-type: disc;
+      }
+      .message-content ol {
+        list-style-type: decimal;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0",
+    "marked": "https://aistudiocdn.com/marked@^13.0.2",
+    "dompurify": "https://aistudiocdn.com/dompurify@^3.1.6"
+  }
+}
+</script>
+</head>
+  <body class="bg-[#141413] text-zinc-100 font-sans">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

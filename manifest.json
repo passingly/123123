@@ -1,0 +1,16 @@
+{
+  "name": "Gemini Character Chat",
+  "short_name": "Gemini Chat",
+  "description": "A role-playing chat platform where users can create and interact with AI characters powered by Gemini. Users can define character personalities with prompts, upload images, and share them for others to engage with.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#141413",
+  "theme_color": "#141413",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
