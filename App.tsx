@@ -8,7 +8,6 @@ import UserProfileList from './components/UserProfileList';
 import CreateUserProfileForm from './components/CreateUserProfileForm';
 import SessionHistoryPanel from './components/SessionHistoryPanel';
 import SessionContinuation from './components/SessionContinuation';
-import IosStorageModal from './components/IosStorageModal';
 import ConfirmModal from './components/ConfirmModal';
 import type { Character, AIModel, UserProfile, ChatSession, ChatMessage, ExportedSessionData } from './types';
 import { get, set } from './utils/storage';
@@ -68,7 +67,6 @@ interface AppState {
   characters: Character[];
   userProfiles: UserProfile[];
   chatSessions: ChatSession[];
-  hasSeenIosModal: boolean;
 }
 
 const App: React.FC = () => {
@@ -86,7 +84,6 @@ const App: React.FC = () => {
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   
-  const [showIosModal, setShowIosModal] = useState(false);
   const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
   const [sessionToExport, setSessionToExport] = useState<ChatSession | null>(null);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
@@ -153,12 +150,6 @@ const App: React.FC = () => {
       try {
         const dbData = await get<AppState>('appState');
         setStateFromData(dbData);
-
-        const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        if (isIos && !dbData?.hasSeenIosModal) {
-            setShowIosModal(true);
-        }
-
       } catch (error) {
         console.error("Failed to load data:", error);
         setStateFromData(null); // Load initial data on error
@@ -170,22 +161,12 @@ const App: React.FC = () => {
     loadData();
   }, []);
   
-  const handleIosModalClose = async () => {
-    setShowIosModal(false);
-    try {
-        await set('hasSeenIosModal', true);
-    } catch (error) {
-        console.error("Failed to save iOS modal seen status:", error);
-    }
-  };
-
 
   useEffect(() => {
     if (!isDataLoaded) return;
 
     const saveData = async () => {
-      const hasSeenIosModal = await get<boolean>('hasSeenIosModal') ?? false;
-      const appState: AppState = { characters, userProfiles, chatSessions, hasSeenIosModal };
+      const appState: AppState = { characters, userProfiles, chatSessions };
       try {
         await set('appState', appState);
       } catch (error) {
@@ -596,10 +577,6 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#141413] font-sans text-zinc-100">
-      <IosStorageModal 
-        isOpen={showIosModal}
-        onClose={handleIosModalClose}
-      />
       <ConfirmModal
         isOpen={showSaveConfirmModal}
         onClose={resetChatState}
