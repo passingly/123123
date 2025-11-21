@@ -8,7 +8,6 @@ import UserProfileList from './components/UserProfileList';
 import CreateUserProfileForm from './components/CreateUserProfileForm';
 import SessionHistoryPanel from './components/SessionHistoryPanel';
 import SessionContinuation from './components/SessionContinuation';
-import ConfirmModal from './components/ConfirmModal';
 import SettingsModal from './components/SettingsModal';
 import type { Character, AIModel, UserProfile, ChatSession, ChatMessage, ExportedSessionData } from './types';
 import { get, set } from './utils/storage';
@@ -85,8 +84,6 @@ const App: React.FC = () => {
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   
-  const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
-  const [sessionToExport, setSessionToExport] = useState<ChatSession | null>(null);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -292,13 +289,7 @@ const App: React.FC = () => {
   };
   
   const handleBackToHome = () => {
-    const session = chatSessions.find(s => s.id === activeSessionId);
-    if (session && session.messages.length > 1) { // has more than just a greeting
-      setSessionToExport(session);
-      setShowSaveConfirmModal(true);
-    } else {
-      resetChatState();
-    }
+    resetChatState();
   };
   
   const resetChatState = () => {
@@ -307,8 +298,6 @@ const App: React.FC = () => {
     setActiveSessionId(null);
     setMostRecentSessionForSelectedChar(null);
     setCurrentView('home');
-    setSessionToExport(null);
-    setShowSaveConfirmModal(false);
   };
 
   const handleNavigateToCreate = () => {
@@ -594,16 +583,6 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#141413] font-sans text-zinc-100">
-      <ConfirmModal
-        isOpen={showSaveConfirmModal}
-        onClose={resetChatState}
-        onConfirm={() => {
-          exportSessionToFile(sessionToExport);
-          resetChatState();
-        }}
-        title="Save Session?"
-        message="Would you like to download a backup of this conversation before returning to the main menu?"
-      />
       
       <SettingsModal
         isOpen={isSettingsOpen}
