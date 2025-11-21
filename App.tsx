@@ -9,6 +9,7 @@ import CreateUserProfileForm from './components/CreateUserProfileForm';
 import SessionHistoryPanel from './components/SessionHistoryPanel';
 import SessionContinuation from './components/SessionContinuation';
 import ConfirmModal from './components/ConfirmModal';
+import SettingsModal from './components/SettingsModal';
 import type { Character, AIModel, UserProfile, ChatSession, ChatMessage, ExportedSessionData } from './types';
 import { get, set } from './utils/storage';
 
@@ -87,6 +88,20 @@ const App: React.FC = () => {
   const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
   const [sessionToExport, setSessionToExport] = useState<ChatSession | null>(null);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
+  
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+
+  useEffect(() => {
+    const storedKey = localStorage.getItem('user_gemini_api_key');
+    if (storedKey) setApiKey(storedKey);
+  }, []);
+
+  const handleSaveSettings = (key: string) => {
+    setApiKey(key);
+    localStorage.setItem('user_gemini_api_key', key);
+    setIsSettingsOpen(false);
+  };
   
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -511,6 +526,7 @@ const App: React.FC = () => {
             models={aiModels}
             onSelectModel={handleModelChange}
             onExportSession={handleExportSession}
+            apiKey={apiKey}
           />
         );
       case 'createCharacter':
@@ -556,6 +572,7 @@ const App: React.FC = () => {
             onExportCharacter={handleExportCharacter}
             isInstallable={!!installPrompt}
             onInstall={handleInstallClick}
+            onOpenSettings={() => setIsSettingsOpen(true)}
           />
         );
     }
@@ -587,6 +604,14 @@ const App: React.FC = () => {
         title="Save Session?"
         message="Would you like to download a backup of this conversation before returning to the main menu?"
       />
+      
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onSave={handleSaveSettings}
+        initialApiKey={apiKey}
+      />
+
       <main className="max-w-7xl mx-auto">
         {renderView()}
       </main>

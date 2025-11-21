@@ -5,6 +5,7 @@ import PlusIcon from './icons/PlusIcon';
 import ArchiveBoxIcon from './icons/ArchiveBoxIcon';
 import ArrowUpTrayIcon from './icons/ArrowUpTrayIcon';
 import ArrowDownTrayIcon from './icons/ArrowDownTrayIcon';
+import Cog6ToothIcon from './icons/Cog6ToothIcon';
 
 interface CharacterListProps {
   characters: Character[];
@@ -15,6 +16,7 @@ interface CharacterListProps {
   onExportCharacter: (character: Character) => void;
   isInstallable: boolean;
   onInstall: () => void;
+  onOpenSettings: () => void;
 }
 
 const CharacterList: React.FC<CharacterListProps> = ({ 
@@ -25,7 +27,8 @@ const CharacterList: React.FC<CharacterListProps> = ({
   onImportFile,
   onExportCharacter,
   isInstallable,
-  onInstall
+  onInstall,
+  onOpenSettings
 }) => {
   const importFileRef = useRef<HTMLInputElement>(null);
 
@@ -45,16 +48,27 @@ const CharacterList: React.FC<CharacterListProps> = ({
     <>
       <input type="file" ref={importFileRef} onChange={handleFileSelected} className="hidden" accept=".json" />
       <div className="p-4 sm:p-6 lg:p-8 animate-fade-in">
-        <header className="flex justify-between items-center mb-6">
-          <button 
-            onClick={onOpenHistory}
-            className="p-2 rounded-full hover:bg-zinc-800 transition-colors"
-            aria-label="Open conversation history"
-          >
-            <ArchiveBoxIcon className="w-7 h-7 text-zinc-100 hover:text-white" />
-          </button>
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <div className="flex items-center gap-2">
+            <button 
+                onClick={onOpenHistory}
+                className="p-2 rounded-full hover:bg-zinc-800 transition-colors"
+                aria-label="Open conversation history"
+            >
+                <ArchiveBoxIcon className="w-7 h-7 text-zinc-100 hover:text-white" />
+            </button>
+            <button 
+                onClick={onOpenSettings}
+                className="p-2 rounded-full hover:bg-zinc-800 transition-colors"
+                aria-label="Settings"
+            >
+                <Cog6ToothIcon className="w-7 h-7 text-zinc-100 hover:text-white" />
+            </button>
+          </div>
+          
           <h1 className="text-3xl sm:text-4xl font-bold text-zinc-100">Select a Character</h1>
-          <div className="flex items-center gap-4">
+          
+          <div className="flex items-center gap-2 sm:gap-4 self-end sm:self-auto">
             {isInstallable && (
               <button
                 onClick={onInstall}

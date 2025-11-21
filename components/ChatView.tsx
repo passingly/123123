@@ -31,6 +31,7 @@ interface ChatViewProps {
   models: AIModel[];
   onSelectModel: (modelId: string) => void;
   onExportSession: () => void;
+  apiKey?: string;
 }
 
 const commonSystemInstruction = `## How It Works
@@ -122,6 +123,7 @@ const ChatView: React.FC<ChatViewProps> = ({
   models,
   onSelectModel,
   onExportSession,
+  apiKey,
 }) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -144,6 +146,7 @@ const ChatView: React.FC<ChatViewProps> = ({
   const chatViewRef = useRef<HTMLDivElement>(null);
 
   const activeModel = models.find(m => m.id === session.modelId) || models[0];
+  const effectiveApiKey = apiKey || process.env.API_KEY;
 
   useEffect(() => {
     const chatViewElement = chatViewRef.current;
@@ -220,7 +223,12 @@ ${userProfile.prompt}`;
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if ((!input.trim() && !uploadedImage) || isLoading || !process.env.API_KEY) return;
+    if ((!input.trim() && !uploadedImage) || isLoading) return;
+    
+    if (!effectiveApiKey) {
+        alert("Please set your Google Gemini API Key in Settings.");
+        return;
+    }
 
     const userMessageText = input.trim();
     const userImage = uploadedImage;
@@ -249,7 +257,7 @@ ${userProfile.prompt}`;
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+      const ai = new GoogleGenAI({ apiKey: effectiveApiKey! });
       const thinkingBudget = activeModel.thinkingBudget;
 
       const history = messages.map(msg => {
@@ -326,14 +334,18 @@ ${userProfile.prompt}`;
 
     } catch (error) {
       console.error("Error generating response:", error);
-      alert("Failed to generate response. Please try again.");
+      alert("Failed to generate response. Please check your API Key and internet connection.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleRegenerateMessage = async (index: number, instruction?: string) => {
-      if (isLoading || !process.env.API_KEY) return;
+      if (isLoading) return;
+      if (!effectiveApiKey) {
+          alert("Please set your Google Gemini API Key in Settings.");
+          return;
+      }
 
       const targetMessage = session.messages[index];
       if (targetMessage.role !== 'model') return; 
@@ -350,7 +362,7 @@ ${userProfile.prompt}`;
       setRegeneratingMessageIndex(index);
 
       try {
-          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+          const ai = new GoogleGenAI({ apiKey: effectiveApiKey! });
           const thinkingBudget = activeModel.thinkingBudget;
 
           const baseSystemInstruction = getSystemInstruction();
