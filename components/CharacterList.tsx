@@ -1,9 +1,8 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import type { Character } from '../types';
 import PlusIcon from './icons/PlusIcon';
 import ArchiveBoxIcon from './icons/ArchiveBoxIcon';
-import ConfirmModal from './ConfirmModal';
 import ArrowUpTrayIcon from './icons/ArrowUpTrayIcon';
 import ArrowDownTrayIcon from './icons/ArrowDownTrayIcon';
 
@@ -12,8 +11,6 @@ interface CharacterListProps {
   onSelectCharacter: (character: Character) => void;
   onNavigateToCreate: () => void;
   onOpenHistory: () => void;
-  isAdultMode: boolean;
-  onToggleAdultMode: (enabled: boolean) => void;
   onImportFile: (file: File) => void;
   onExportCharacter: (character: Character) => void;
   isInstallable: boolean;
@@ -25,28 +22,12 @@ const CharacterList: React.FC<CharacterListProps> = ({
   onSelectCharacter, 
   onNavigateToCreate, 
   onOpenHistory,
-  isAdultMode,
-  onToggleAdultMode,
   onImportFile,
   onExportCharacter,
   isInstallable,
   onInstall
 }) => {
-  const [isConfirmAdultModeOpen, setIsConfirmAdultModeOpen] = useState(false);
   const importFileRef = useRef<HTMLInputElement>(null);
-
-  const handleToggle = () => {
-    if (!isAdultMode) {
-      setIsConfirmAdultModeOpen(true);
-    } else {
-      onToggleAdultMode(false);
-    }
-  };
-
-  const handleConfirmAdultMode = () => {
-    onToggleAdultMode(true);
-    setIsConfirmAdultModeOpen(false);
-  };
 
   const handleImportClick = () => {
     importFileRef.current?.click();
@@ -74,21 +55,6 @@ const CharacterList: React.FC<CharacterListProps> = ({
           </button>
           <h1 className="text-3xl sm:text-4xl font-bold text-zinc-100">Select a Character</h1>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <label htmlFor="adult-mode-toggle" className="text-sm font-medium text-zinc-200 cursor-pointer">Adult (18+)</label>
-              <button
-                id="adult-mode-toggle"
-                role="switch"
-                aria-checked={isAdultMode}
-                onClick={handleToggle}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2 focus:ring-offset-zinc-900 ${isAdultMode ? 'bg-zinc-100' : 'bg-zinc-700'}`}
-              >
-                <span
-                  aria-hidden="true"
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full shadow ring-0 transition duration-200 ease-in-out ${isAdultMode ? 'translate-x-5 bg-zinc-900' : 'translate-x-0 bg-white'}`}
-                />
-              </button>
-            </div>
             {isInstallable && (
               <button
                 onClick={onInstall}
@@ -140,19 +106,6 @@ const CharacterList: React.FC<CharacterListProps> = ({
           ))}
         </div>
       </div>
-      <ConfirmModal
-        isOpen={isConfirmAdultModeOpen}
-        onClose={() => setIsConfirmAdultModeOpen(false)}
-        onConfirm={handleConfirmAdultMode}
-        title="Enable Adult Mode?"
-        message={
-          <>
-            <p>By enabling this mode, you confirm that you are of legal age to view explicit content in your region.</p>
-            <p className="mt-2">The character's responses may include mature and graphic themes. This setting will be saved for future sessions.</p>
-            <p className="mt-4 font-bold">Do you wish to proceed?</p>
-          </>
-        }
-      />
     </>
   );
 };

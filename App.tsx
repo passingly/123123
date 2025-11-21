@@ -68,7 +68,6 @@ interface AppState {
   characters: Character[];
   userProfiles: UserProfile[];
   chatSessions: ChatSession[];
-  isAdultMode: boolean;
   hasSeenIosModal: boolean;
 }
 
@@ -83,7 +82,6 @@ const App: React.FC = () => {
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState(false);
-  const [isAdultMode, setIsAdultMode] = useState<boolean>(false);
   const [mostRecentSessionForSelectedChar, setMostRecentSessionForSelectedChar] = useState<ChatSession | null>(null);
   const [importStatus, setImportStatus] = useState<string | null>(null);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
@@ -124,7 +122,6 @@ const App: React.FC = () => {
   const setStateFromData = (data: Partial<AppState> | null) => {
     setCharacters(data?.characters ?? initialCharacters);
     setUserProfiles(data?.userProfiles ?? initialUserProfiles);
-    setIsAdultMode(data?.isAdultMode ?? false);
   
     const savedChatSessions = data?.chatSessions ?? [];
     if (savedChatSessions.length > 0) {
@@ -188,7 +185,7 @@ const App: React.FC = () => {
 
     const saveData = async () => {
       const hasSeenIosModal = await get<boolean>('hasSeenIosModal') ?? false;
-      const appState: AppState = { characters, userProfiles, chatSessions, isAdultMode, hasSeenIosModal };
+      const appState: AppState = { characters, userProfiles, chatSessions, hasSeenIosModal };
       try {
         await set('appState', appState);
       } catch (error) {
@@ -209,11 +206,7 @@ const App: React.FC = () => {
       clearTimeout(debounceTimeout);
       window.removeEventListener('pagehide', handlePageHide);
     };
-  }, [chatSessions, characters, userProfiles, isAdultMode, isDataLoaded]);
-
-  const handleToggleAdultMode = (enabled: boolean) => {
-    setIsAdultMode(enabled);
-  };
+  }, [chatSessions, characters, userProfiles, isDataLoaded]);
 
   const handleSelectCharacter = (character: Character) => {
     setSelectedCharacter(character);
@@ -408,7 +401,6 @@ const App: React.FC = () => {
       character,
       userProfile,
       session,
-      isAdultMode: isAdultMode,
       chatLog: chatLog,
     };
 
@@ -441,7 +433,7 @@ const App: React.FC = () => {
         const data = JSON.parse(text);
 
         if (data.character && data.userProfile && data.session) {
-          const { character: importedChar, userProfile: importedProfile, session: importedSession, isAdultMode: importedAdultMode } = data as ExportedSessionData;
+          const { character: importedChar, userProfile: importedProfile, session: importedSession } = data as ExportedSessionData;
           
           let alertMessage = "";
           if (Array.isArray(importedSession.summaries) && importedSession.summaries.length > 0) {
@@ -465,8 +457,6 @@ const App: React.FC = () => {
               ? prev.map(s => s.id === importedSession.id ? importedSession : s)
               : [importedSession, ...prev];
           });
-          
-          setIsAdultMode(importedAdultMode ?? false);
           
           setSelectedCharacter(importedChar);
           setSelectedUserProfile(importedProfile);
@@ -539,7 +529,6 @@ const App: React.FC = () => {
             onBack={handleBackToHome}
             models={aiModels}
             onSelectModel={handleModelChange}
-            isAdultMode={isAdultMode}
             onExportSession={handleExportSession}
           />
         );
@@ -582,8 +571,6 @@ const App: React.FC = () => {
             onSelectCharacter={handleSelectCharacter}
             onNavigateToCreate={handleNavigateToCreate}
             onOpenHistory={() => setIsHistoryPanelOpen(true)}
-            isAdultMode={isAdultMode}
-            onToggleAdultMode={handleToggleAdultMode}
             onImportFile={handleImportFile}
             onExportCharacter={handleExportCharacter}
             isInstallable={!!installPrompt}

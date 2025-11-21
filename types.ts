@@ -49,6 +49,5 @@ export interface ExportedSessionData {
   character: Character;
   userProfile: UserProfile;
   session: ChatSession;
-  isAdultMode: boolean;
   chatLog: string;
 }

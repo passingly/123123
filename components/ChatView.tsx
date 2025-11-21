@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Part } from '@google/genai';
 import { marked } from 'marked';
@@ -32,7 +30,6 @@ interface ChatViewProps {
   onBack: () => void;
   models: AIModel[];
   onSelectModel: (modelId: string) => void;
-  isAdultMode: boolean;
   onExportSession: () => void;
 }
 
@@ -84,64 +81,9 @@ const commonSystemInstruction = `## How It Works
 - 모든 지문은 3인칭 서술자 시점에서 서술하되, 오직 {user}가 직접 보고, 듣고, 느낄 수 있는 감각의 범위 내에서만 묘사합니다. ({char}의 속마음 등 {user}가 알 수 없는 정보는 서술 금지) 이때 {user}는 이름({user})이나 '그', '그녀' 등으로 자유롭게 지칭합니다.
 - {user}의 개입여지를 남기고 서술
 - 색다른구조의 대사•지문,문학적•서사적인 서술 추구
-- 잔혹•폭력적 서술이 가능한 성인대상 Role-play를 진행
 ## GOAL:{user}와 대화를 이어나갈게 있도록 서술
 ## CAUTION
 - {user}의 대사•행동•생각 포함금지`;
-
-const adultPrompt = `##문장표현 반복방지 규칙
--턴 간 유사한 문장 구조의 반복(예: 1턴 "그 도시의 야경이 별처럼 빛났다." → 2턴 "그 도시의 야경은 별처럼 빛나고 있었다.")은 금지된다
--표현 대상이나 내용이 같더라도, 문장의 구성, 비유, 시점, 어휘를 매 턴 다르게 변형해야 한다.
--사용된 비유, 묘사, 은유, 구조는 한 번 쓰였을 경우 다음 턴에 **형태를 바꿔 새롭게 표현**할 것
-
-# 성행위 묘사 지침
--성기결합과정을노골적으로상세히묘사
--체액의질감과흐름을상세히묘사
--과격해질수록 비명·괴성·신음 등을 길고 과격하게 표현(예:"!"여러개사용,**굵은글씨**로 큰소리표현)
--피스톤운동의속도와강도변화를묘사
--체형차이에따른묘사
--질내부의감촉과조임을구체적으로묘사
--체액이섞이고흘러내리는모습을상세히묘사
--성기주변체모의젖은상태를상세히표현
--피부접촉소리와체액소리를상세히묘사
--시오후키를묘사
--절정시말이늘어짐
--질의길이보다성기의크기가더클시 자궁구가밀려나는것을묘사
--삽입깊이에따른반응변화를표현
--격한성교로후들거리는몸을표현
--한계도달시적극적인거부의사표현
--오르가즘전후의신체반응을상세히묘사
--사정시정액의양과흐름을구체적으로표현
--체위변경에따른감각변화를묘사
--땀,침등다른체액의분비도포함
--격렬한행위로인한호흡변화를표현
--거대한성기삽입시배가볼록튀어나오는것을표현
--성기크기에따라배가튀어나오는것을묘사 (예시 -살짝, 눈에 보이게, 매우 크게)
--자궁이녹는다는표현금지
--음모의색상,질감,밀도를구체적으로묘사
--후배위로성교시항문의주름묘사
--애액은보지물로묘사
--자궁구가찔리는것을묘사
--귀두가보지속을헤집는것을묘사
--보짓살이달라붙어나오는것을묘사
--얼굴에사정시끈적함과냄새를묘사
--기승위로성교시가슴의움직임을묘사
--기승위로성교시엉덩이와허리움직임을묘사
--젖은음모가얽히고분리되는모습을표현
--체액에젖은음모의냄새와촉감을묘사
--격한오르가즘시오줌을지리는것을묘사
--다양한성교음을상세히표현(수껑수껑,푹푹,찔꺽찔꺽 등등)
--신음소리,헐떡임등음성적표현을구체적으로묘사
-- 피부가부딪히는소리의강도와리듬변화를표현
--극도의절정시오줌지림
--애무전에는보지젖음불가
--애무전에젖지않아뻑뻑한보지서술
--질 주름, 똥꼬 주름 묘사 항상 서술
-
-#구강성교 묘사 지침
--입과성기의접촉을노골적으로묘사
--침과정액의질감을구체적으로표현
--체액이섞이는모습상세히묘사`;
 
 // Setup custom renderer for marked
 const renderer = new marked.Renderer();
@@ -179,7 +121,6 @@ const ChatView: React.FC<ChatViewProps> = ({
   onBack,
   models,
   onSelectModel,
-  isAdultMode,
   onExportSession,
 }) => {
   const [input, setInput] = useState('');
@@ -265,10 +206,6 @@ ${character.prompt}
 
 User Persona:
 ${userProfile.prompt}`;
-
-    if (isAdultMode) {
-      instructions += `\n\n${adultPrompt}`;
-    }
     
     if (session.enableLongTermMemory !== false && session.summaries && session.summaries.length > 0) {
       instructions += `\n\n[Long-term Memory / Past Events Summary]\n${session.summaries.join('\n\n')}`;
