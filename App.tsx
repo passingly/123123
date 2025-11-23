@@ -9,6 +9,7 @@ import CreateUserProfileForm from './components/CreateUserProfileForm';
 import SessionHistoryPanel from './components/SessionHistoryPanel';
 import SessionContinuation from './components/SessionContinuation';
 import SettingsModal from './components/SettingsModal';
+import DeleteSessionModal from './components/DeleteSessionModal';
 import type { Character, AIModel, UserProfile, ChatSession, ChatMessage, ExportedSessionData } from './types';
 import { get, set } from './utils/storage';
 
@@ -57,8 +58,8 @@ const aiModels: AIModel[] = [
   { id: 'flash', name: 'gemini-2.5-flash', displayName: 'Gemini 2.5 Flash', description: 'Fast, efficient, and great for everyday conversations.' },
   { id: 'pro', name: 'gemini-2.5-pro', displayName: 'Gemini 2.5 Pro', description: 'Advanced model for more creative and complex role-playing.' },
   { id: 'pro-lite', name: 'gemini-2.5-pro', displayName: 'Gemini 2.5 Pro (Lite)', description: 'Pro model with a limited thinking budget (128 tokens) for faster, concise responses.', thinkingBudget: 128 },
-  { id: 'v3-pro', name: 'gemini-3-pro-preview', displayName: 'Gemini 3.0 Pro', description: 'State-of-the-art reasoning model with maximum thinking capacity for the most complex interactions.', thinkingBudget: 32768 },
-  { id: 'v3-pro-lite', name: 'gemini-3-pro-preview', displayName: 'Gemini 3.0 Pro (Lite)', description: 'Gemini 3.0 Pro with a limited thinking budget (128 tokens).', thinkingBudget: 128 },
+  { id: 'v3-pro', name: 'gemini-3-pro-preview', displayName: 'Gemini 3.0 Pro (High)', description: 'State-of-the-art reasoning model with High thinking capacity for complex interactions.', thinkingBudget: 32768 },
+  { id: 'v3-pro-lite', name: 'gemini-3-pro-preview', displayName: 'Gemini 3.0 Pro (Lite)', description: 'Gemini 3.0 Pro with Low thinking capacity (2k) for faster responses.', thinkingBudget: 2048 },
 ];
 
 type View = 'home' | 'chat' | 'createCharacter' | 'selectUserProfile' | 'createUserProfile' | 'sessionContinuation';
@@ -88,6 +89,8 @@ const App: React.FC = () => {
   
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [apiKey, setApiKey] = useState('');
+
+  const [sessionToDeleteId, setSessionToDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     const storedKey = localStorage.getItem('user_gemini_api_key');
@@ -333,9 +336,17 @@ const App: React.FC = () => {
   };
   
   const handleDeleteSession = (sessionId: string) => {
-    if (window.confirm("Are you sure you want to delete this conversation forever?")) {
-      setChatSessions(prev => prev.filter(s => s.id !== sessionId));
-    }
+    setSessionToDeleteId(sessionId);
+  };
+
+  const confirmDeleteSession = () => {
+      if (sessionToDeleteId) {
+          setChatSessions(prev => prev.filter(s => s.id !== sessionToDeleteId));
+          if (activeSessionId === sessionToDeleteId) {
+              handleBackToHome();
+          }
+          setSessionToDeleteId(null);
+      }
   };
   
   const handleModelChange = (modelId: string) => {
@@ -603,6 +614,13 @@ const App: React.FC = () => {
         onResumeSession={handleResumeSession}
         onDeleteSession={handleDeleteSession}
       />
+      
+      <DeleteSessionModal 
+        isOpen={!!sessionToDeleteId}
+        onClose={() => setSessionToDeleteId(null)}
+        onConfirm={confirmDeleteSession}
+      />
+
       {importStatus && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center text-white animate-fade-in">
           <svg className="animate-spin h-10 w-10 text-zinc-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

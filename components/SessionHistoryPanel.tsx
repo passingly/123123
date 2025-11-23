@@ -107,16 +107,23 @@ const SessionHistoryPanel: React.FC<SessionHistoryPanelProps> = ({
                 const userProfile = profilesById[session.userProfileId];
                 if (!character || !userProfile) return null;
 
+                const lastMsg = session.messages.length > 0 ? session.messages[session.messages.length - 1] : null;
+                const lastContent = lastMsg?.content?.[lastMsg.activeContentIndex];
+                const previewText = lastContent?.text || (lastContent?.imageUrl ? '[Image]' : '');
+
                 return (
                   <div key={session.id} className="bg-zinc-800 p-3 rounded-lg flex items-center justify-between gap-4 group hover:bg-zinc-700 transition-colors">
                     <button onClick={() => onResumeSession(session.id)} className="flex items-center gap-3 text-left flex-1 min-w-0">
                       <img src={character.image} alt={character.name} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-zinc-200 truncate group-hover:text-white">{character.name}</p>
-                        <div className="flex items-center gap-1.5 text-sm text-zinc-400">
-                            <UserIcon className="w-4 h-4 flex-shrink-0" />
+                        <div className="flex items-center gap-1.5 text-sm text-zinc-400 mb-1">
+                            <UserIcon className="w-3.5 h-3.5 flex-shrink-0" />
                             <p className="truncate">{userProfile.name}</p>
                         </div>
+                        {previewText && (
+                            <p className="text-xs text-zinc-500 truncate">{previewText}</p>
+                        )}
                       </div>
                     </button>
                     <button 
