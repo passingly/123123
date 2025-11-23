@@ -89,7 +89,7 @@ const commonSystemInstruction = `## How It Works
 // Setup custom renderer for marked
 const renderer = new marked.Renderer();
 // Handle both new marked (object) and old marked (string) signatures to prevent "undefined"
-renderer.code = (codeOrToken: any, language: any) => {
+renderer.code = (codeOrToken: any, language?: any) => {
     let text = '';
     let lang = '';
 
@@ -276,16 +276,16 @@ ${userProfile.prompt}`;
         return { role: msg.role, parts };
       });
 
-      const generationConfig: any = {
-        temperature: 1,
-      };
+      const generationConfig: any = {};
 
       if (thinkingBudget) {
         generationConfig.thinkingConfig = { thinkingBudget };
         // Increase maxOutputTokens to accommodate thinking tokens + response
         generationConfig.maxOutputTokens = thinkingBudget + 8192;
+        // Do NOT set temperature for reasoning models as it may cause conflicts
       } else {
         generationConfig.maxOutputTokens = 8192;
+        generationConfig.temperature = 1;
       }
 
       const modelId = activeModel.name; 
@@ -335,9 +335,9 @@ ${userProfile.prompt}`;
             }
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating response:", error);
-      alert("Failed to generate response. Please check your API Key and internet connection.");
+      alert(`Generaton Error: ${error.message || "Unknown error occurred"}`);
     } finally {
       setIsLoading(false);
     }
@@ -404,16 +404,16 @@ ${baseSystemInstruction}
             return { role: msg.role, parts };
           });
 
-          const generationConfig: any = {
-             temperature: 1,
-          };
+          const generationConfig: any = {};
 
           if (thinkingBudget) {
              generationConfig.thinkingConfig = { thinkingBudget };
              // Increase maxOutputTokens to accommodate thinking tokens + response
              generationConfig.maxOutputTokens = thinkingBudget + 8192;
+             // Do NOT set temperature for reasoning models
           } else {
              generationConfig.maxOutputTokens = 8192;
+             generationConfig.temperature = 1;
           }
 
           const chatHistory = history.slice(0, -1);
@@ -469,9 +469,9 @@ ${baseSystemInstruction}
                 }
           }
           
-      } catch (error) {
+      } catch (error: any) {
           console.error("Error regenerating:", error);
-          alert("Failed to regenerate response.");
+          alert(`Regeneration Error: ${error.message || "Unknown error occurred"}`);
       } finally {
           setIsLoading(false);
           setRegeneratingMessageIndex(null);
