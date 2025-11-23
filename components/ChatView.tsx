@@ -277,12 +277,15 @@ ${userProfile.prompt}`;
       });
 
       const generationConfig: any = {
-        maxOutputTokens: 8192,
         temperature: 1,
       };
 
       if (thinkingBudget) {
         generationConfig.thinkingConfig = { thinkingBudget };
+        // Increase maxOutputTokens to accommodate thinking tokens + response
+        generationConfig.maxOutputTokens = thinkingBudget + 8192;
+      } else {
+        generationConfig.maxOutputTokens = 8192;
       }
 
       const modelId = activeModel.name; 
@@ -402,11 +405,15 @@ ${baseSystemInstruction}
           });
 
           const generationConfig: any = {
-             maxOutputTokens: 8192,
              temperature: 1,
           };
+
           if (thinkingBudget) {
              generationConfig.thinkingConfig = { thinkingBudget };
+             // Increase maxOutputTokens to accommodate thinking tokens + response
+             generationConfig.maxOutputTokens = thinkingBudget + 8192;
+          } else {
+             generationConfig.maxOutputTokens = 8192;
           }
 
           const chatHistory = history.slice(0, -1);
