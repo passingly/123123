@@ -58,8 +58,7 @@ const aiModels: AIModel[] = [
   { id: 'flash', name: 'gemini-2.5-flash', displayName: 'Gemini 2.5 Flash', description: 'Fast, efficient, and great for everyday conversations.' },
   { id: 'pro', name: 'gemini-2.5-pro', displayName: 'Gemini 2.5 Pro', description: 'Advanced model for more creative and complex role-playing.' },
   { id: 'pro-lite', name: 'gemini-2.5-pro', displayName: 'Gemini 2.5 Pro (Lite)', description: 'Pro model with a limited thinking budget (128 tokens) for faster, concise responses.', thinkingBudget: 128 },
-  { id: 'v3-pro', name: 'gemini-3-pro-preview', displayName: 'Gemini 3.0 Pro (High)', description: 'State-of-the-art reasoning model with High thinking capacity for complex interactions.', thinkingBudget: 32768 },
-  { id: 'v3-pro-lite', name: 'gemini-3-pro-preview', displayName: 'Gemini 3.0 Pro (Lite)', description: 'Gemini 3.0 Pro with Low thinking capacity (2k) for faster responses.', thinkingBudget: 2048 },
+  { id: 'gemini-3-pro-preview', name: 'gemini-3-pro-preview', displayName: 'Gemini 3.0 Pro', description: 'State-of-the-art reasoning model.' },
 ];
 
 type View = 'home' | 'chat' | 'createCharacter' | 'selectUserProfile' | 'createUserProfile' | 'sessionContinuation';

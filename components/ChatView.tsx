@@ -67,6 +67,8 @@ const commonSystemInstruction = `## How It Works
 4.  **혼합 형식 (Combination):** 지문과 대사가 함께 나올 경우, 각 규칙을 준수하여 작성합니다.
     - 예시: *그녀는 고개를 돌리며* "이쪽이야."
     - 예시: "저게 뭐지?" *그는 무언가를 가리키며 말했다.*
+5.  **생각 (Thought):** 인물의 속마음이나 생각은 **작은따옴표(\`'\`)**로 감싸서 표현합니다.
+    - 예시: '오늘은 왠지 느낌이 좋은걸.'
 
 **[중요]** 위의 출력 규칙을 지키지 않는 것은 역할극의 몰입감을 해치는 심각한 오류로 간주됩니다. 어떤 상황에서도 이 형식을 벗어나서는 안 됩니다.
 
@@ -280,9 +282,12 @@ ${userProfile.prompt}`;
 
       if (thinkingBudget) {
         generationConfig.thinkingConfig = { thinkingBudget };
-        // Increase maxOutputTokens to accommodate thinking tokens + response
-        generationConfig.maxOutputTokens = thinkingBudget + 8192;
+        // Increase maxOutputTokens to 32k to accommodate thinking tokens + response within standard limit
+        generationConfig.maxOutputTokens = 32768;
         // Do NOT set temperature for reasoning models as it may cause conflicts
+      } else if (activeModel.name === 'gemini-3-pro-preview') {
+        // Gemini 3.0 Pro special handling: High token limit, let model decide thinking, no strict temp
+        generationConfig.maxOutputTokens = 32768;
       } else {
         generationConfig.maxOutputTokens = 8192;
         generationConfig.temperature = 1;
@@ -337,7 +342,8 @@ ${userProfile.prompt}`;
 
     } catch (error: any) {
       console.error("Error generating response:", error);
-      alert(`Generaton Error: ${error.message || "Unknown error occurred"}`);
+      const errorMessage = typeof error.message === 'object' ? JSON.stringify(error.message) : error.message || "Unknown error occurred";
+      alert(`Generation Error: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
@@ -408,9 +414,12 @@ ${baseSystemInstruction}
 
           if (thinkingBudget) {
              generationConfig.thinkingConfig = { thinkingBudget };
-             // Increase maxOutputTokens to accommodate thinking tokens + response
-             generationConfig.maxOutputTokens = thinkingBudget + 8192;
+             // Increase maxOutputTokens to 32k to accommodate thinking tokens + response within standard limit
+             generationConfig.maxOutputTokens = 32768;
              // Do NOT set temperature for reasoning models
+          } else if (activeModel.name === 'gemini-3-pro-preview') {
+             // Gemini 3.0 Pro special handling: High token limit, let model decide thinking, no strict temp
+             generationConfig.maxOutputTokens = 32768;
           } else {
              generationConfig.maxOutputTokens = 8192;
              generationConfig.temperature = 1;
@@ -471,7 +480,8 @@ ${baseSystemInstruction}
           
       } catch (error: any) {
           console.error("Error regenerating:", error);
-          alert(`Regeneration Error: ${error.message || "Unknown error occurred"}`);
+          const errorMessage = typeof error.message === 'object' ? JSON.stringify(error.message) : error.message || "Unknown error occurred";
+          alert(`Regeneration Error: ${errorMessage}`);
       } finally {
           setIsLoading(false);
           setRegeneratingMessageIndex(null);
