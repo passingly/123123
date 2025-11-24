@@ -13,8 +13,8 @@ interface CreateCharacterFormProps {
 }
 
 interface KeywordImageItem {
-  internalId: string; // Unique ID for React key
-  description: string;
+  id: string;
+  keyword: string;
   image: string;
 }
 
@@ -58,26 +58,11 @@ const CreateCharacterForm: React.FC<CreateCharacterFormProps> = ({ onSubmit, onB
             
             // Restore keyword images if they exist
             if (data.keywordImages) {
-              const loadedImages: KeywordImageItem[] = Object.entries(data.keywordImages).map(([key, val], index) => {
-                const internalId = `kwi-${Date.now()}-${index}`;
-                
-                // Handle new format { data, description }
-                if (typeof val === 'object' && val !== null && 'data' in val) {
-                   return {
-                     internalId,
-                     description: val.description,
-                     image: val.data
-                   };
-                }
-                
-                // Handle legacy format (key is keyword, val is base64 string)
-                // We use the old keyword as the description
-                return {
-                  internalId,
-                  description: key, // Use the old keyword as the description
-                  image: val as string
-                };
-              });
+              const loadedImages: KeywordImageItem[] = Object.entries(data.keywordImages).map(([keyword, img], index) => ({
+                id: `kwi-${Date.now()}-${index}`,
+                keyword,
+                image: img
+              }));
               setKeywordImages(loadedImages);
             } else {
               setKeywordImages([]);
@@ -106,25 +91,25 @@ const CreateCharacterForm: React.FC<CreateCharacterFormProps> = ({ onSubmit, onB
 
   // Keyword Image Handlers
   const addKeywordImage = () => {
-    setKeywordImages([...keywordImages, { internalId: `kwi-${Date.now()}`, description: '', image: '' }]);
+    setKeywordImages([...keywordImages, { id: `kwi-${Date.now()}`, keyword: '', image: '' }]);
   };
 
-  const removeKeywordImage = (internalId: string) => {
-    setKeywordImages(keywordImages.filter(item => item.internalId !== internalId));
+  const removeKeywordImage = (id: string) => {
+    setKeywordImages(keywordImages.filter(item => item.id !== id));
   };
 
-  const updateKeywordImage = (internalId: string, field: 'description' | 'image', value: string) => {
+  const updateKeywordImage = (id: string, field: 'keyword' | 'image', value: string) => {
     setKeywordImages(keywordImages.map(item => 
-      item.internalId === internalId ? { ...item, [field]: value } : item
+      item.id === id ? { ...item, [field]: value } : item
     ));
   };
 
-  const handleKeywordImageUpload = (internalId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleKeywordImageUpload = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        updateKeywordImage(internalId, 'image', reader.result as string);
+        updateKeywordImage(id, 'image', reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -138,17 +123,11 @@ const CreateCharacterForm: React.FC<CreateCharacterFormProps> = ({ onSubmit, onB
       return;
     }
     
-    // Convert array back to Record object with sequential keys "1", "2", "3"...
-    const keywordImagesMap: Record<string, { data: string; description: string }> = {};
-    let count = 1;
+    // Convert array back to Record object
+    const keywordImagesMap: Record<string, string> = {};
     keywordImages.forEach(item => {
-      if (item.image) {
-        // Use sequential numbers as keys
-        keywordImagesMap[String(count)] = {
-            data: item.image,
-            description: item.description.trim() || `Image ${count}`
-        };
-        count++;
+      if (item.keyword.trim() && item.image) {
+        keywordImagesMap[item.keyword.trim()] = item.image;
       }
     });
 
@@ -241,75 +220,68 @@ const CreateCharacterForm: React.FC<CreateCharacterFormProps> = ({ onSubmit, onB
         {/* Keyword Images Section */}
         <div className="border-t border-zinc-800 pt-6">
           <div className="flex justify-between items-center mb-4">
-            <label className="block text-sm font-medium text-zinc-300">Reaction Images</label>
+            <label className="block text-sm font-medium text-zinc-300">Keyword Images (Optional)</label>
             <button
               type="button"
               onClick={addKeywordImage}
               className="flex items-center gap-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md transition-colors"
             >
               <PlusIcon className="w-4 h-4" />
-              <span>Add Image</span>
+              <span>Add Keyword Image</span>
             </button>
           </div>
           <p className="text-xs text-zinc-500 mb-4">
-            Upload images for specific emotions or scenes. The AI will learn the description and show the image using the ID (e.g. <code>{'{{img::1}}'}</code>).
+            Map keywords to images. When the character uses <code>{'{{img::keyword}}'}</code> in chat, the image will be displayed.
           </p>
           
           <div className="space-y-3">
-            {keywordImages.map((item, index) => {
-              const displayNumber = index + 1;
-              return (
-                <div key={item.internalId} className="flex flex-col sm:flex-row gap-3 bg-zinc-800/50 p-3 rounded-lg border border-zinc-700/50 items-start sm:items-center">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-zinc-700 text-zinc-300 font-bold text-sm flex-shrink-0">
-                    {displayNumber}
-                  </div>
-                  
-                  <div className="flex-1 w-full sm:w-auto">
-                    <input
-                      type="text"
-                      value={item.description}
-                      onChange={(e) => updateKeywordImage(item.internalId, 'description', e.target.value)}
-                      className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1.5 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-500"
-                      placeholder="Description (e.g., smiling happily, looking angry)"
-                    />
-                  </div>
-                  
-                  <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-                     <div className="flex items-center gap-3">
-                        {item.image ? (
-                          <img src={item.image} alt="Thumb" className="w-10 h-10 rounded object-cover border border-zinc-600" />
-                        ) : (
-                          <div className="w-10 h-10 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-600">
-                             <PhotoIcon className="w-5 h-5" />
-                          </div>
-                        )}
-                        
-                        <label className="cursor-pointer text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-200 px-2 py-1.5 rounded transition-colors whitespace-nowrap">
-                          Upload
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleKeywordImageUpload(item.internalId, e)}
-                            className="hidden"
-                          />
-                        </label>
-                     </div>
-
-                     <button
-                      type="button"
-                      onClick={() => removeKeywordImage(item.internalId)}
-                      className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-zinc-900 rounded transition-colors"
-                      title="Remove"
-                    >
-                      <TrashIcon className="w-5 h-5" />
-                    </button>
-                  </div>
+            {keywordImages.map((item, index) => (
+              <div key={item.id} className="flex flex-col sm:flex-row gap-3 bg-zinc-800/50 p-3 rounded-lg border border-zinc-700/50 items-start sm:items-center">
+                <div className="flex-1 w-full sm:w-auto">
+                  <input
+                    type="text"
+                    value={item.keyword}
+                    onChange={(e) => updateKeywordImage(item.id, 'keyword', e.target.value)}
+                    className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1.5 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-500"
+                    placeholder="keyword (e.g., smile)"
+                  />
                 </div>
-              );
-            })}
+                
+                <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                   <div className="flex items-center gap-3">
+                      {item.image ? (
+                        <img src={item.image} alt="Thumb" className="w-10 h-10 rounded object-cover border border-zinc-600" />
+                      ) : (
+                        <div className="w-10 h-10 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-600">
+                           <PhotoIcon className="w-5 h-5" />
+                        </div>
+                      )}
+                      
+                      <label className="cursor-pointer text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-200 px-2 py-1.5 rounded transition-colors whitespace-nowrap">
+                        Select Image
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleKeywordImageUpload(item.id, e)}
+                          className="hidden"
+                        />
+                      </label>
+                   </div>
+
+                   <button
+                    type="button"
+                    onClick={() => removeKeywordImage(item.id)}
+                    className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-zinc-900 rounded transition-colors"
+                    title="Remove"
+                  >
+                    <TrashIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            ))}
             {keywordImages.length === 0 && (
               <div className="text-center py-4 bg-zinc-800/30 rounded-lg border border-dashed border-zinc-800 text-zinc-600 text-sm">
-                No reaction images added.
+                No keyword images added.
               </div>
             )}
           </div>

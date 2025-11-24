@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Part } from '@google/genai';
 import { marked } from 'marked';
@@ -216,24 +217,14 @@ ${userProfile.prompt}`;
     }
     
     // Inject logic for keyword images if they exist
-    if (character.keywordImages) {
-      const images = Object.entries(character.keywordImages);
-      if (images.length > 0) {
-        instructions += `\n\n[Visual Expression Rules]
+    if (character.keywordImages && Object.keys(character.keywordImages).length > 0) {
+      const keywords = Object.keys(character.keywordImages).join(', ');
+      instructions += `\n\n[Visual Expression Rules]
 You can display specific images to express emotions or scenes.
-The following images are available for you to use:
-`;
-        images.forEach(([key, value]) => {
-          // Backward compatibility: value might be string (base64) or object {data, description}
-          const description = typeof value === 'string' ? key : (value as any).description;
-          instructions += `- ID "${key}": ${description}\n`;
-        });
-
-        instructions += `
-When the situation matches a description, output the corresponding image ID using this format: {{img::ID}}
-For example, to show image ID "1", output: {{img::1}}
+When you want to show an image corresponding to one of these keywords: [${keywords}], 
+output the text exactly like this: {{img::KEYWORD}}
+For example, to show the 'smile' image, output {{img::smile}}.
 Integrate this naturally into your response alongside text/actions.`;
-      }
     }
 
     if (session.memoPrompt) {
@@ -614,13 +605,12 @@ ${baseSystemInstruction}
       if (character.keywordImages) {
           processedText = text.replace(/{{img::(.+?)}}/g, (match, keyword) => {
               const cleanKeyword = keyword.trim();
-              const imgEntry = character.keywordImages?.[cleanKeyword];
-              
-              if (imgEntry) {
-                  // Handle both legacy string format and new object format
-                  const imgUrl = typeof imgEntry === 'string' ? imgEntry : imgEntry.data;
-                  // We add newlines to ensure it renders as a block element
-                  return `\n\n![${cleanKeyword}](${imgUrl})\n\n`;
+              const imgData = character.keywordImages?.[cleanKeyword];
+              if (imgData) {
+                  // Render as a block image with some standard styling via wrapper class if needed,
+                  // or just standard markdown image which marked will handle.
+                  // We add newlines to ensure it renders as a block element if it's on its own line.
+                  return `\n\n![${cleanKeyword}](${imgData})\n\n`;
               }
               return match; // Keep original if keyword not found
           });
