@@ -17,6 +17,8 @@ export interface Character {
   prompt: string;
   image: string;
   greeting?: string;
+  // Supports legacy string format (base64) and new object format { data, description }
+  keywordImages?: Record<string, string | { data: string; description: string }>;
 }
 
 export interface UserProfile {

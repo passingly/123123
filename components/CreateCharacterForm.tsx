@@ -3,10 +3,19 @@ import React, { useState, useRef } from 'react';
 import type { Character } from '../types';
 import ArrowLeftIcon from './icons/ArrowLeftIcon';
 import ArrowUpTrayIcon from './icons/ArrowUpTrayIcon';
+import PlusIcon from './icons/PlusIcon';
+import TrashIcon from './icons/TrashIcon';
+import PhotoIcon from './icons/PhotoIcon';
 
 interface CreateCharacterFormProps {
   onSubmit: (character: Omit<Character, 'id'>) => void;
   onBack: () => void;
+}
+
+interface KeywordImageItem {
+  internalId: string; // Unique ID for React key
+  description: string;
+  image: string;
 }
 
 const CreateCharacterForm: React.FC<CreateCharacterFormProps> = ({ onSubmit, onBack }) => {
@@ -14,6 +23,7 @@ const CreateCharacterForm: React.FC<CreateCharacterFormProps> = ({ onSubmit, onB
   const [prompt, setPrompt] = useState('');
   const [image, setImage] = useState('');
   const [greeting, setGreeting] = useState('');
+  const [keywordImages, setKeywordImages] = useState<KeywordImageItem[]>([]);
   const [error, setError] = useState('');
   const importFileRef = useRef<HTMLInputElement>(null);
 
@@ -45,6 +55,34 @@ const CreateCharacterForm: React.FC<CreateCharacterFormProps> = ({ onSubmit, onB
             setPrompt(data.prompt);
             setImage(data.image);
             setGreeting(data.greeting || ''); // Handle optional greeting
+            
+            // Restore keyword images if they exist
+            if (data.keywordImages) {
+              const loadedImages: KeywordImageItem[] = Object.entries(data.keywordImages).map(([key, val], index) => {
+                const internalId = `kwi-${Date.now()}-${index}`;
+                
+                // Handle new format { data, description }
+                if (typeof val === 'object' && val !== null && 'data' in val) {
+                   return {
+                     internalId,
+                     description: val.description,
+                     image: val.data
+                   };
+                }
+                
+                // Handle legacy format (key is keyword, val is base64 string)
+                // We use the old keyword as the description
+                return {
+                  internalId,
+                  description: key, // Use the old keyword as the description
+                  image: val as string
+                };
+              });
+              setKeywordImages(loadedImages);
+            } else {
+              setKeywordImages([]);
+            }
+
             setError(''); // Clear previous errors
           } else {
             throw new Error("Invalid character file format. Required fields: name, prompt, image.");
@@ -66,6 +104,32 @@ const CreateCharacterForm: React.FC<CreateCharacterFormProps> = ({ onSubmit, onB
     importFileRef.current?.click();
   };
 
+  // Keyword Image Handlers
+  const addKeywordImage = () => {
+    setKeywordImages([...keywordImages, { internalId: `kwi-${Date.now()}`, description: '', image: '' }]);
+  };
+
+  const removeKeywordImage = (internalId: string) => {
+    setKeywordImages(keywordImages.filter(item => item.internalId !== internalId));
+  };
+
+  const updateKeywordImage = (internalId: string, field: 'description' | 'image', value: string) => {
+    setKeywordImages(keywordImages.map(item => 
+      item.internalId === internalId ? { ...item, [field]: value } : item
+    ));
+  };
+
+  const handleKeywordImageUpload = (internalId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        updateKeywordImage(internalId, 'image', reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,8 +137,23 @@ const CreateCharacterForm: React.FC<CreateCharacterFormProps> = ({ onSubmit, onB
       setError('All fields including an image are required.');
       return;
     }
+    
+    // Convert array back to Record object with sequential keys "1", "2", "3"...
+    const keywordImagesMap: Record<string, { data: string; description: string }> = {};
+    let count = 1;
+    keywordImages.forEach(item => {
+      if (item.image) {
+        // Use sequential numbers as keys
+        keywordImagesMap[String(count)] = {
+            data: item.image,
+            description: item.description.trim() || `Image ${count}`
+        };
+        count++;
+      }
+    });
+
     setError('');
-    onSubmit({ name, prompt, image, greeting });
+    onSubmit({ name, prompt, image, greeting, keywordImages: keywordImagesMap });
   };
 
   return (
@@ -118,6 +197,24 @@ const CreateCharacterForm: React.FC<CreateCharacterFormProps> = ({ onSubmit, onB
         </div>
 
         <div>
+          <label htmlFor="image" className="block text-sm font-medium text-zinc-300 mb-2">Character Profile Image</label>
+          <div className="mt-2 flex items-center gap-4">
+            {image && <img src={image} alt="Preview" className="w-24 h-24 rounded-lg object-cover border border-zinc-700" />}
+            <label className="cursor-pointer flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-2 px-4 rounded-md transition-colors border border-zinc-700">
+              <PhotoIcon className="w-5 h-5" />
+              <span>Upload Image</span>
+              <input
+                type="file"
+                id="image"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </label>
+          </div>
+        </div>
+
+        <div>
           <label htmlFor="prompt" className="block text-sm font-medium text-zinc-300 mb-2">Role-playing Prompt</label>
           <textarea
             id="prompt"
@@ -141,21 +238,84 @@ const CreateCharacterForm: React.FC<CreateCharacterFormProps> = ({ onSubmit, onB
           />
         </div>
 
-        <div>
-          <label htmlFor="image" className="block text-sm font-medium text-zinc-300 mb-2">Character Image</label>
-          <div className="mt-2 flex items-center gap-4">
-            {image && <img src={image} alt="Preview" className="w-24 h-24 rounded-lg object-cover" />}
-            <input
-              type="file"
-              id="image"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="block w-full text-sm text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-zinc-100 file:text-zinc-900 hover:file:bg-zinc-200"
-            />
+        {/* Keyword Images Section */}
+        <div className="border-t border-zinc-800 pt-6">
+          <div className="flex justify-between items-center mb-4">
+            <label className="block text-sm font-medium text-zinc-300">Reaction Images</label>
+            <button
+              type="button"
+              onClick={addKeywordImage}
+              className="flex items-center gap-1 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-md transition-colors"
+            >
+              <PlusIcon className="w-4 h-4" />
+              <span>Add Image</span>
+            </button>
+          </div>
+          <p className="text-xs text-zinc-500 mb-4">
+            Upload images for specific emotions or scenes. The AI will learn the description and show the image using the ID (e.g. <code>{'{{img::1}}'}</code>).
+          </p>
+          
+          <div className="space-y-3">
+            {keywordImages.map((item, index) => {
+              const displayNumber = index + 1;
+              return (
+                <div key={item.internalId} className="flex flex-col sm:flex-row gap-3 bg-zinc-800/50 p-3 rounded-lg border border-zinc-700/50 items-start sm:items-center">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-zinc-700 text-zinc-300 font-bold text-sm flex-shrink-0">
+                    {displayNumber}
+                  </div>
+                  
+                  <div className="flex-1 w-full sm:w-auto">
+                    <input
+                      type="text"
+                      value={item.description}
+                      onChange={(e) => updateKeywordImage(item.internalId, 'description', e.target.value)}
+                      className="w-full bg-zinc-900 border border-zinc-700 rounded px-2 py-1.5 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-zinc-500"
+                      placeholder="Description (e.g., smiling happily, looking angry)"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                     <div className="flex items-center gap-3">
+                        {item.image ? (
+                          <img src={item.image} alt="Thumb" className="w-10 h-10 rounded object-cover border border-zinc-600" />
+                        ) : (
+                          <div className="w-10 h-10 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-600">
+                             <PhotoIcon className="w-5 h-5" />
+                          </div>
+                        )}
+                        
+                        <label className="cursor-pointer text-xs bg-zinc-700 hover:bg-zinc-600 text-zinc-200 px-2 py-1.5 rounded transition-colors whitespace-nowrap">
+                          Upload
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleKeywordImageUpload(item.internalId, e)}
+                            className="hidden"
+                          />
+                        </label>
+                     </div>
+
+                     <button
+                      type="button"
+                      onClick={() => removeKeywordImage(item.internalId)}
+                      className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-zinc-900 rounded transition-colors"
+                      title="Remove"
+                    >
+                      <TrashIcon className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+            {keywordImages.length === 0 && (
+              <div className="text-center py-4 bg-zinc-800/30 rounded-lg border border-dashed border-zinc-800 text-zinc-600 text-sm">
+                No reaction images added.
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-4">
           <button
             type="submit"
             className="bg-zinc-100 hover:bg-white text-zinc-900 font-bold py-2 px-6 rounded-lg transition-transform transform hover:scale-105"

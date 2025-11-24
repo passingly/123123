@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Part } from '@google/genai';
 import { marked } from 'marked';
@@ -214,6 +213,27 @@ ${userProfile.prompt}`;
     
     if (session.enableLongTermMemory !== false && session.summaries && session.summaries.length > 0) {
       instructions += `\n\n[Long-term Memory / Past Events Summary]\n${session.summaries.join('\n\n')}`;
+    }
+    
+    // Inject logic for keyword images if they exist
+    if (character.keywordImages) {
+      const images = Object.entries(character.keywordImages);
+      if (images.length > 0) {
+        instructions += `\n\n[Visual Expression Rules]
+You can display specific images to express emotions or scenes.
+The following images are available for you to use:
+`;
+        images.forEach(([key, value]) => {
+          // Backward compatibility: value might be string (base64) or object {data, description}
+          const description = typeof value === 'string' ? key : (value as any).description;
+          instructions += `- ID "${key}": ${description}\n`;
+        });
+
+        instructions += `
+When the situation matches a description, output the corresponding image ID using this format: {{img::ID}}
+For example, to show image ID "1", output: {{img::1}}
+Integrate this naturally into your response alongside text/actions.`;
+      }
     }
 
     if (session.memoPrompt) {
@@ -588,7 +608,25 @@ ${baseSystemInstruction}
   };
 
   const renderMessageContent = (text: string) => {
-      const rawMarkup = marked.parse(text, { async: false }) as string;
+      // Pre-processing: Replace {{img::keyword}} with Markdown image syntax
+      let processedText = text;
+      
+      if (character.keywordImages) {
+          processedText = text.replace(/{{img::(.+?)}}/g, (match, keyword) => {
+              const cleanKeyword = keyword.trim();
+              const imgEntry = character.keywordImages?.[cleanKeyword];
+              
+              if (imgEntry) {
+                  // Handle both legacy string format and new object format
+                  const imgUrl = typeof imgEntry === 'string' ? imgEntry : imgEntry.data;
+                  // We add newlines to ensure it renders as a block element
+                  return `\n\n![${cleanKeyword}](${imgUrl})\n\n`;
+              }
+              return match; // Keep original if keyword not found
+          });
+      }
+
+      const rawMarkup = marked.parse(processedText, { async: false }) as string;
       const cleanMarkup = DOMPurify.sanitize(rawMarkup);
       return { __html: cleanMarkup };
   };
