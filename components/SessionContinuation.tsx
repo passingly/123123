@@ -16,7 +16,8 @@ interface SessionContinuationProps {
 
 const SessionContinuation: React.FC<SessionContinuationProps> = ({ character, recentSession, userProfile, onStartNew, onContinue, onBack }) => {
     const lastMessage = recentSession?.messages?.length ? recentSession.messages[recentSession.messages.length - 1] : null;
-    const lastMessageText = lastMessage?.content?.[lastMessage.activeContentIndex]?.text;
+    const activeIndex = lastMessage ? (lastMessage.activeContentIndex ?? 0) : 0;
+    const lastMessageText = lastMessage?.content?.[activeIndex]?.text;
     const snippet = lastMessageText ? (lastMessageText.length > 100 ? lastMessageText.substring(0, 100) + '...' : lastMessageText) : null;
 
     return (
