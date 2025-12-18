@@ -29,7 +29,7 @@ export interface UserProfile {
 
 export interface AIModel {
   id: string;
-  name: 'gemini-2.5-flash' | 'gemini-2.5-pro' | 'gemini-3-pro-preview';
+  name: 'gemini-2.5-flash' | 'gemini-2.5-pro' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview';
   displayName: string;
   description: string;
   thinkingBudget?: number;

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import CharacterList from './components/CharacterList';
@@ -55,6 +54,7 @@ const initialCharacters: Character[] = [
 const initialUserProfiles: UserProfile[] = [];
 
 const aiModels: AIModel[] = [
+  { id: 'flash-3', name: 'gemini-3-flash-preview', displayName: 'Gemini 3.0 Flash', description: 'Next-generation fast model with enhanced reasoning capabilities.' },
   { id: 'flash', name: 'gemini-2.5-flash', displayName: 'Gemini 2.5 Flash', description: 'Fast, efficient, and great for everyday conversations.' },
   { id: 'pro', name: 'gemini-2.5-pro', displayName: 'Gemini 2.5 Pro', description: 'Advanced model for more creative and complex role-playing.' },
   { id: 'pro-lite', name: 'gemini-2.5-pro', displayName: 'Gemini 2.5 Pro (Lite)', description: 'Pro model with a limited thinking budget (128 tokens) for faster, concise responses.', thinkingBudget: 128 },
@@ -75,7 +75,7 @@ const App: React.FC = () => {
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
   const [selectedUserProfile, setSelectedUserProfile] = useState<UserProfile | null>(null);
   const [currentView, setCurrentView] = useState<View>('home');
-  const [selectedModelId, setSelectedModelId] = useState<string>('pro');
+  const [selectedModelId, setSelectedModelId] = useState<string>('flash-3');
   
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
